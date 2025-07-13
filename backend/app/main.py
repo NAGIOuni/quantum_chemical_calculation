@@ -19,6 +19,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
+
 origins = [
     "http://localhost:3000",
 ]
