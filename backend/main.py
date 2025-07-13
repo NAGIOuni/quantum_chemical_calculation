@@ -1,16 +1,19 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import users, servers
 from supabase.client import create_client, Client
+from dotenv import load_dotenv
 import uvicorn
 import os
 
+load_dotenv()
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Supabase URL and Key must be set as environment variables")
+else:
+    print("supabaseと接続できています")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -27,9 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(users.router, prefix="/api/users", tags=["users"])
-app.include_router(servers.router, prefix="/api/servers", tags=["servers"])
 
 
 @app.get("/")
