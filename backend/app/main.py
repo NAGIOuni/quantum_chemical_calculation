@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
+from app.api import user
 import uvicorn
 import os
 
@@ -18,6 +19,8 @@ else:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
+
+app.include_router(user.router)
 
 
 origins = [
