@@ -1,29 +1,23 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer, SmallInteger
-from sqlalchemy.orm import relationship
-from app.models.base import Base
-from datetime import datetime, timezone
 import uuid
+from sqlalchemy import Column, String, Integer, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class Molecule(Base):
     __tablename__ = "molecules"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    job_bundle_id = Column(String, ForeignKey("job_bundles.id"), nullable=False)
-    name = Column(String(255), nullable=False)
-    charge = Column(SmallInteger, nullable=False)
-    multiplicity = Column(SmallInteger, nullable=False)
-    atom_count = Column(Integer, nullable=False)
-    local_gjf_path = Column(String(512), nullable=False)
-    input_xyz_coords = Column(Text, nullable=False)
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False)
+    charge = Column(Integer, nullable=False)
+    multiplicity = Column(Integer, nullable=False)
+    structure_xyz = Column(Text, nullable=False)
+    bundle_id = Column(UUID(as_uuid=True), ForeignKey("job_bundles.id"), nullable=False)
+    latest_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=True)
 
-    job_bundle = relationship("JobBundle", back_populates="molecules")
-    jobs = relationship("Job", back_populates="molecule")
+    job_bundle = relationship("JobBundle", backref="molecules")
+    latest_job = relationship(
+        "Job", foreign_keys=[latest_job_id], backref="latest_for_molecules"
+    )

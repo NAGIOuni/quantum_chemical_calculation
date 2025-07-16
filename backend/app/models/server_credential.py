@@ -1,26 +1,17 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from app.models.base import Base
-from datetime import datetime, timezone
 import uuid
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime, timezone
+
+from .base import Base
 
 
 class ServerCredential(Base):
     __tablename__ = "server_credentials"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    hostname = Column(String(255), nullable=False)
-    username = Column(String(50), nullable=False)
-    password_encrypted = Column(String, nullable=True)
-    ssh_key_path = Column(String(512), nullable=True)
-    created_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
-
-    user = relationship("User", back_populates="server_credentials")
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    host = Column(String(100), nullable=False)
+    username = Column(String(100), nullable=False)
+    password_encrypted = Column(String(512), nullable=False)
+    auth_method = Column(String(20), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
