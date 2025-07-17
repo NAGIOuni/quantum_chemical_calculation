@@ -2,21 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 from dependencies import get_db, SECRET_KEY, ALGORITHM
 from models import User
 from crud.user import get_user_by_id
+from utils.security import verify_password
 import crud.user as crud_user
 
 router = APIRouter(tags=["auth"])
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # トークン有効時間
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # 本番ではbcryptなどを使用してください
-    return plain_password == hashed_password
 
 
 @router.post("/auth/login")
@@ -40,6 +36,6 @@ def login(
 
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

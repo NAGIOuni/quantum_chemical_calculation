@@ -1,61 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.schemas.server_credential import (
-    ServerCredentialResponse,
+from schemas.server_credential import (
     ServerCredentialCreate,
     ServerCredentialUpdate,
+    ServerCredentialResponse,
 )
-from app.crud import server_credential
-from uuid import UUID
-from typing import List
+from crud import server_credential as crud
+from dependencies import get_db
+from models import ServerCredential
+
+import paramiko
+
+router = APIRouter(prefix="/server-credentials", tags=["server_credentials"])
 
 
-router = APIRouter(prefix="/server-credentials", tags=["Server Credentials"])
+@router.post("/", response_model=ServerCredentialResponse)
+def create(data: ServerCredentialCreate, db: Session = Depends(get_db)):
+    return crud.create_credential(db, data)
 
 
-def get_db():
-    db = SessionLocal()
+@router.get("/", response_model=list[ServerCredentialResponse])
+def get_all(db: Session = Depends(get_db)):
+    return crud.get_all(db)
+
+
+@router.get("/{id}", response_model=ServerCredentialResponse)
+def get_one(id: str, db: Session = Depends(get_db)):
+    credential = crud.get_by_id(db, id)
+    if not credential:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    return credential
+
+
+@router.patch("/{id}", response_model=ServerCredentialResponse)
+def update(id: str, data: ServerCredentialUpdate, db: Session = Depends(get_db)):
+    credential = crud.get_by_id(db, id)
+    if not credential:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    return crud.update_credential(db, credential, data)
+
+
+@router.delete("/{id}", status_code=204)
+def delete(id: str, db: Session = Depends(get_db)):
+    credential = crud.get_by_id(db, id)
+    if not credential:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    crud.delete_credential(db, credential)
+
+
+@router.post("/test-connection")
+def test_connection(data: ServerCredentialCreate):
     try:
-        yield db
-    finally:
-        db.close()
-
-
-@router.post("/", response_model=schemas.ServerCredentialResponse)
-def create_credential(
-    credential: schemas.ServerCredentialCreate, db: Session = Depends(get_db)
-):
-    return crud.create_server_credential(db, credential)
-
-
-@router.get("/", response_model=List[schemas.ServerCredentialResponse])
-def read_credentials(db: Session = Depends(get_db)):
-    return crud.get_all_credentials(db)
-
-
-@router.get("/{credential_id}", response_model=schemas.ServerCredentialResponse)
-def read_credential(credential_id: UUID, db: Session = Depends(get_db)):
-    db_cred = crud.get_server_credential(db, credential_id)
-    if db_cred is None:
-        raise HTTPException(status_code=404, detail="Credential not found")
-    return db_cred
-
-
-@router.patch("/{credential_id}", response_model=schemas.ServerCredentialResponse)
-def update_credential(
-    credential_id: UUID,
-    credential_update: schemas.ServerCredentialUpdate,
-    db: Session = Depends(get_db),
-):
-    updated = crud.update_server_credential(db, credential_id, credential_update)
-    if updated is None:
-        raise HTTPException(status_code=404, detail="Credential not found")
-    return updated
-
-
-@router.delete("/{credential_id}", status_code=204)
-def delete_credential(credential_id: UUID, db: Session = Depends(get_db)):
-    success = crud.delete_server_credential(db, credential_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Credential not found")
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=data.host,
+            username=data.username,
+            password=data.password,
+            timeout=5,
+        )
+        client.close()
+        return {"result": "接続成功"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"接続失敗: {str(e)}")
