@@ -1,42 +1,36 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.schemas.user import UserResponse, UserCreate
-from app.crud import user as crud_user
+from schemas.user import UserCreate, UserResponse, UserUpdate
+from crud import user as crud_user
+from dependencies import get_db, get_current_user
+from models import User
 
-router = APIRouter()
-
-
-# DBセッション依存性
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/users", response_model=list[UserResponse])
-def read_users(db: Session = Depends(get_db)):
-    return crud_user.get_users(db)
+@router.post("/", response_model=UserResponse)
+def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
+    # 既存ユーザー確認処理が必要であれば追加
+    return crud_user.create_user(db, user_in)
 
 
-@router.get("/users/{user_id}", response_model=UserResponse)
-def read_user(user_id: str, db: Session = Depends(get_db)):
-    user = crud_user.get_user(db, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+@router.get("/me", response_model=UserResponse)
+def read_current_user(current_user: User = Depends(get_current_user)):
+    return current_user
 
 
-@router.post("/users", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    return crud_user.create_user(db, user)
+@router.patch("/me", response_model=UserResponse)
+def update_current_user(
+    user_in: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return crud_user.update_user(db, current_user, user_in)
 
 
-@router.delete("/users/{user_id}")
-def delete_user(user_id: str, db: Session = Depends(get_db)):
-    success = crud_user.delete_user(db, user_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "User deleted"}
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_user(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    crud_user.delete_user(db, current_user)
