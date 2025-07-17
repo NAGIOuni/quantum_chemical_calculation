@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from schemas.job_bundle import JobBundleCreate, JobBundleUpdate, JobBundleResponse
-from models import JobBundle, User
-from dependencies import get_db, get_current_user
-from crud import job_bundle as crud
+from app.schemas.job_bundle import JobBundleCreate, JobBundleUpdate, JobBundleResponse
+from app.models.job_bundle import JobBundle
+from app.models.user import User
+from app.dependencies import get_db, get_current_user
+from app.crud import job_bundle as crud
 
 router = APIRouter(prefix="/job-bundles", tags=["job_bundles"])
 

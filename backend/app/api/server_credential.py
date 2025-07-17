@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from schemas.server_credential import (
+from app.schemas.server_credential import (
     ServerCredentialCreate,
     ServerCredentialUpdate,
     ServerCredentialResponse,
 )
-from crud import server_credential as crud
-from dependencies import get_db
-from models import ServerCredential
+from app.crud import server_credential as crud
+from app.dependencies import get_db
+from app.models.server_credential import ServerCredential
 
 import paramiko
 

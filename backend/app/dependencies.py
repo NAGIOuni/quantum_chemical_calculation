@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from database import SessionLocal
-from models import User
-import crud.user as crud_user
+from app.database import SessionLocal
+from app.models.user import User
+import app.crud.user as crud_user
 
 # 環境変数などで管理するのが望ましい
 SECRET_KEY = "your-secret-key"

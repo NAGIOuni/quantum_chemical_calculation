@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from jose import jwt
 from datetime import timedelta, datetime, timezone
 
-from dependencies import get_db, SECRET_KEY, ALGORITHM
-from models import User
-from crud.user import get_user_by_id
-from utils.security import verify_password
-import crud.user as crud_user
+from app.dependencies import get_db, SECRET_KEY, ALGORITHM
+from app.models.user import User
+from app.crud.user import get_user_by_id
+from app.utils.security import verify_password
+import app.crud.user as crud_user
 
 router = APIRouter(tags=["auth"])
 

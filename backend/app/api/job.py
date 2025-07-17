@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from dependencies import get_db, get_current_user
-from schemas.job import JobCreate, JobResponse, JobUpdate
-from crud import job as crud
-from models import Job, User
-from utils.encryption import decrypt_text
+from app.schemas.job import JobCreate, JobResponse, JobUpdate
+from app.crud import job as crud
+from app.models import Job, User
+from app.utils.encryption import decrypt_text
 
 import os
 

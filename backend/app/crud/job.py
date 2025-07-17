@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Job
-from schemas.job import JobCreate
+from app.models.job import Job
+from app.schemas.job import JobCreate
 from datetime import datetime, timezone
 import uuid
 from typing import Any

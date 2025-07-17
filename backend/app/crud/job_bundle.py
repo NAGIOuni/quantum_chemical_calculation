@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import JobBundle
-from schemas.job_bundle import JobBundleCreate, JobBundleUpdate
+from app.models.job_bundle import JobBundle
+from app.schemas.job_bundle import JobBundleCreate, JobBundleUpdate
 from datetime import datetime, timezone
 import uuid
 from typing import Any

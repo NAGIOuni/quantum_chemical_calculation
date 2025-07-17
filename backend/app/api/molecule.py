@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from models import Molecule, User
-from schemas.molecule import MoleculeCreate, MoleculeUpdate, MoleculeResponse
-from crud import molecule as crud
-from dependencies import get_db, get_current_user
+from app.models.molecule import Molecule
+from app.models.user import User
+from app.schemas.molecule import MoleculeCreate, MoleculeUpdate, MoleculeResponse
+from app.crud import molecule as crud
+from app.dependencies import get_db, get_current_user
 
 router = APIRouter(prefix="/molecules", tags=["molecules"])
 

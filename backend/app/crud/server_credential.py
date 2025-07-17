@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from models import ServerCredential
-from schemas.server_credential import ServerCredentialCreate, ServerCredentialUpdate
-from utils.encryption import encrypt_text, decrypt_text
+from app.models.server_credential import ServerCredential
+from app.schemas.server_credential import ServerCredentialCreate, ServerCredentialUpdate
+from app.utils.encryption import encrypt_text, decrypt_text
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def create_credential(db: Session, data: ServerCredentialCreate) -> ServerCredential:
@@ -13,7 +13,7 @@ def create_credential(db: Session, data: ServerCredentialCreate) -> ServerCreden
         username=data.username,
         auth_method=data.auth_method,
         password_encrypted=encrypt_text(data.password),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
     db.add(credential)
     db.commit()

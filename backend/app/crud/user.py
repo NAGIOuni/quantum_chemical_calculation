@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from models import User
-from schemas.user import UserCreate, UserUpdate
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate
 import uuid
 from datetime import datetime, timezone
-from utils.security import hash_password
+from app.utils.security import hash_password
 
 
 def create_user(db: Session, user_in: UserCreate) -> User:

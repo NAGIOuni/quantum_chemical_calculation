@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Molecule
-from schemas.molecule import MoleculeCreate, MoleculeUpdate
+from app.models.molecule import Molecule
+from app.schemas.molecule import MoleculeCreate, MoleculeUpdate
 import uuid
 from datetime import datetime
 
