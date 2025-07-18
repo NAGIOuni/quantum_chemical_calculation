@@ -8,7 +8,7 @@ from app.schemas.molecule import MoleculeCreate, MoleculeUpdate, MoleculeRespons
 from app.crud import molecule as crud
 from app.dependencies import get_db, get_current_user
 
-router = APIRouter(prefix="/molecules", tags=["molecules"])
+router = APIRouter()
 
 
 @router.post("/", response_model=MoleculeResponse)
@@ -30,7 +30,7 @@ def list_molecules(
 
 @router.get("/{id}", response_model=MoleculeResponse)
 def get_molecule(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     molecule = crud.get_molecule(db, id)
     if not molecule or molecule.job_bundle.user_id != user.id:
@@ -40,7 +40,7 @@ def get_molecule(
 
 @router.patch("/{id}", response_model=MoleculeResponse)
 def update_molecule(
-    id: str,
+    id: int,
     data: MoleculeUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -53,7 +53,7 @@ def update_molecule(
 
 @router.delete("/{id}", status_code=204)
 def delete_molecule(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     molecule = crud.get_molecule(db, id)
     if not molecule or molecule.job_bundle.user_id != user.id:

@@ -26,7 +26,7 @@ def get_job_status_via_qstat(
 ) -> str:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname=host, username=username, password=password)
+    ssh.connect(hostname=host, username=username, password=password, timeout=10)
 
     cmd = f"qstat -x {remote_job_id}"
     stdin, stdout, stderr = ssh.exec_command(cmd)

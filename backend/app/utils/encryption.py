@@ -11,9 +11,9 @@ if FERNET_KEY is None:
 fernet = Fernet(FERNET_KEY.encode())
 
 
-def encrypt_text(text: str) -> str:
-    return fernet.encrypt(text.encode()).decode()
+def encrypt_text(plain: str) -> str:
+    return fernet.encrypt(plain.encode()).decode()
 
 
-def decrypt_text(encrypted: str) -> str:
-    return fernet.decrypt(encrypted.encode()).decode()
+def decrypt_text(token: str) -> str:
+    return fernet.decrypt(token.encode()).decode()

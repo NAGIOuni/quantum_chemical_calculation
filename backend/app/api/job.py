@@ -10,7 +10,7 @@ from app.utils.encryption import decrypt_text
 
 import os
 
-router = APIRouter(prefix="/jobs", tags=["jobs"])
+router = APIRouter()
 
 
 @router.post("/", response_model=JobResponse)
@@ -25,12 +25,12 @@ def create_job(
 
 @router.get("/", response_model=List[JobResponse])
 def list_jobs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return crud.get_jobs_by_user(db, user.id)
+    return crud.get_jobs_by_user(db, user.id)  # type: ignore
 
 
 @router.get("/{id}", response_model=JobResponse)
 def get_job(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     job = crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
@@ -40,7 +40,7 @@ def get_job(
 
 @router.patch("/{id}", response_model=JobResponse)
 def update_job(
-    id: str,
+    id: int,
     data: JobUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -55,7 +55,7 @@ def update_job(
 
 @router.delete("/{id}", status_code=204)
 def delete_job(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     job = crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
@@ -69,7 +69,7 @@ def delete_job(
 
 @router.post("/{id}/cancel")
 def cancel_job(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_execution import JobExecutionController
     from crud.job import update_job_status
@@ -103,7 +103,7 @@ def cancel_job(
 
 @router.post("/{id}/relaunch", response_model=JobResponse)
 def relaunch_job(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_execution import JobExecutionController
     from crud.job import create_job, update_job_status
@@ -152,7 +152,7 @@ def relaunch_job(
 
 @router.get("/{id}/log")
 def get_job_log(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_monitor import get_log_tail_via_ssh, get_job_status_via_qstat
     from services.job_execution import JobExecutionController

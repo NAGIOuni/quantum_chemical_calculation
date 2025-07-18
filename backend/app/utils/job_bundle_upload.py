@@ -3,18 +3,18 @@ from sqlalchemy.orm import Session
 from typing import List
 import os
 
-from dependencies import get_db, get_current_user
-from models import JobBundle, Molecule, User
-from schemas.upload import GJFUploadResult
-from utils.gjf_parser import parse_gjf
-import crud.molecule as crud_molecule
+from app.dependencies import get_db, get_current_user
+from app.models import JobBundle, Molecule, User
+from app.schemas.upload import GJFUploadResult
+from app.utils.gjf_parser import parse_gjf
+import app.crud.molecule as crud_molecule
 
 router = APIRouter(prefix="/job-bundles", tags=["gjf_upload"])
 
 
 @router.post("/{bundle_id}/upload-gjf", response_model=List[GJFUploadResult])
 async def upload_gjf_files(
-    bundle_id: str,
+    bundle_id: int,
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),

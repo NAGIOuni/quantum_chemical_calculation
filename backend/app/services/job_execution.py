@@ -46,7 +46,7 @@ class JobExecutionController:
         job_id = output.split("job")[1].split("(")[0].strip()
         return job_id
 
-    def cancel_job(self, job_id: Any):
+    def cancel_job(self, job_id: int):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=self.host, username=self.username, password=self.password)  # type: ignore

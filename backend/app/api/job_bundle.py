@@ -8,7 +8,7 @@ from app.models.user import User
 from app.dependencies import get_db, get_current_user
 from app.crud import job_bundle as crud
 
-router = APIRouter(prefix="/job-bundles", tags=["job_bundles"])
+router = APIRouter()
 
 
 @router.post("/", response_model=JobBundleResponse)
@@ -17,7 +17,7 @@ def create_bundle(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return crud.create_bundle(db, user.id, data)
+    return crud.create_bundle(db, data)
 
 
 @router.get("/", response_model=List[JobBundleResponse])
@@ -27,7 +27,7 @@ def list_bundles(db: Session = Depends(get_db), user: User = Depends(get_current
 
 @router.get("/{id}", response_model=JobBundleResponse)
 def get_bundle(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     bundle = crud.get_bundle_by_id(db, id)
     if not bundle or bundle.user_id != user.id:  # type: ignore
@@ -37,7 +37,7 @@ def get_bundle(
 
 @router.patch("/{id}", response_model=JobBundleResponse)
 def update_bundle(
-    id: str,
+    id: int,
     data: JobBundleUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -50,7 +50,7 @@ def update_bundle(
 
 @router.delete("/{id}", status_code=204)
 def delete_bundle(
-    id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     bundle = crud.get_bundle_by_id(db, id)
     if not bundle or bundle.user_id != user.id:  # type: ignore

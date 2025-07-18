@@ -11,7 +11,7 @@ from app.models.server_credential import ServerCredential
 
 import paramiko
 
-router = APIRouter(prefix="/server-credentials", tags=["server_credentials"])
+router = APIRouter()
 
 
 @router.post("/", response_model=ServerCredentialResponse)
@@ -25,7 +25,7 @@ def get_all(db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=ServerCredentialResponse)
-def get_one(id: str, db: Session = Depends(get_db)):
+def get_one(id: int, db: Session = Depends(get_db)):
     credential = crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
@@ -33,7 +33,7 @@ def get_one(id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/{id}", response_model=ServerCredentialResponse)
-def update(id: str, data: ServerCredentialUpdate, db: Session = Depends(get_db)):
+def update(id: int, data: ServerCredentialUpdate, db: Session = Depends(get_db)):
     credential = crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
@@ -41,7 +41,7 @@ def update(id: str, data: ServerCredentialUpdate, db: Session = Depends(get_db))
 
 
 @router.delete("/{id}", status_code=204)
-def delete(id: str, db: Session = Depends(get_db)):
+def delete(id: int, db: Session = Depends(get_db)):
     credential = crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")

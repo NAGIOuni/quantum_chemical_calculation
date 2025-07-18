@@ -6,14 +6,8 @@ import uuid
 from typing import Any
 
 
-def create_bundle(db: Session, user_id: Any, data: JobBundleCreate) -> JobBundle:
-    bundle = JobBundle(
-        id=str(uuid.uuid4()),
-        name=data.name,
-        calc_settings=data.calc_settings,
-        user_id=user_id,
-        created_at=datetime.now(timezone.utc),
-    )
+def create_bundle(db: Session, data: JobBundleCreate) -> JobBundle:
+    bundle = JobBundle(**data.dict())
     db.add(bundle)
     db.commit()
     db.refresh(bundle)
@@ -24,8 +18,12 @@ def get_all_bundles_by_user(db: Session, user_id: Any):
     return db.query(JobBundle).filter(JobBundle.user_id == user_id).all()
 
 
-def get_bundle_by_id(db: Session, bundle_id: Any):
+def get_bundle_by_id(db: Session, bundle_id: int) -> JobBundle | None:
     return db.query(JobBundle).filter(JobBundle.id == bundle_id).first()
+
+
+def get_bundles_by_user(db: Session, user_id: int) -> list[JobBundle]:
+    return db.query(JobBundle).filter(JobBundle.user_id == user_id).all()
 
 
 def update_bundle(db: Session, bundle: JobBundle, data: JobBundleUpdate) -> JobBundle:

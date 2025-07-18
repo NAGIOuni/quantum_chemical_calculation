@@ -6,25 +6,22 @@ from datetime import datetime
 
 
 def create_molecule(db: Session, data: MoleculeCreate) -> Molecule:
-    molecule = Molecule(
-        id=uuid.uuid4(),
-        name=data.name,
-        charge=data.charge,
-        multiplicity=data.multiplicity,
-        structure_xyz=data.structure_xyz,
-        bundle_id=data.bundle_id,
-    )
-    db.add(molecule)
+    mol = Molecule(**data.dict())
+    db.add(mol)
     db.commit()
-    db.refresh(molecule)
-    return molecule
+    db.refresh(mol)
+    return mol
 
 
-def get_molecule(db: Session, molecule_id: str) -> Molecule:
-    return db.query(Molecule).filter(Molecule.id == molecule_id).first()
+def get_molecule(db: Session, mol_id: int) -> Molecule | None:
+    return db.query(Molecule).filter(Molecule.id == mol_id).first()
 
 
-def get_all_molecules_by_user(db: Session, user_id: str):
+def get_molecules_by_bundle(db: Session, bundle_id: int) -> list[Molecule]:
+    return db.query(Molecule).filter(Molecule.bundle_id == bundle_id).all()
+
+
+def get_all_molecules_by_user(db: Session, user_id: int):
     return (
         db.query(Molecule)
         .join(Molecule.job_bundle)

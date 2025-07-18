@@ -7,27 +7,18 @@ from typing import Any
 
 
 def create_job(db: Session, data: JobCreate) -> Job:
-    job = Job(
-        id=str(uuid.uuid4()),
-        molecule_id=data.molecule_id,
-        gjf_path=data.gjf_path,
-        log_path=None,
-        job_type=data.job_type,
-        status="queued",
-        submitted_at=datetime.now(timezone.utc),
-        parent_job_id=data.parent_job_id,
-    )
+    job = Job(**data.dict())
     db.add(job)
     db.commit()
     db.refresh(job)
     return job
 
 
-def get_job(db: Session, job_id: str) -> Job:
+def get_job(db: Session, job_id: int) -> Job:
     return db.query(Job).filter(Job.id == job_id).first()
 
 
-def get_jobs_by_user(db: Session, user_id: Any):
+def get_jobs_by_user(db: Session, user_id: int):
     return (
         db.query(Job)
         .join(Job.molecule)

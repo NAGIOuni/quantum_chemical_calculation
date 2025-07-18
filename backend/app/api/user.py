@@ -5,7 +5,7 @@ from app.crud import user as crud_user
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter()
 
 
 @router.post("/", response_model=UserResponse)
