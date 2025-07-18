@@ -8,7 +8,7 @@ class MoleculeBase(BaseModel):
     charge: int
     multiplicity: int
     structure_xyz: str
-    bundle_id: str
+    bundle_id: int
 
 
 class MoleculeCreate(MoleculeBase):
@@ -23,7 +23,7 @@ class MoleculeUpdate(BaseModel):
 
 
 class MoleculeResponse(MoleculeBase):
-    id: str
+    id: int
     latest_job_id: Optional[str]
 
     class Config:

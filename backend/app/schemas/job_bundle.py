@@ -18,8 +18,8 @@ class JobBundleUpdate(BaseModel):
 
 
 class JobBundleResponse(JobBundleBase):
-    id: str
-    user_id: str
+    id: int
+    user_id: int
     created_at: datetime
 
     class Config:

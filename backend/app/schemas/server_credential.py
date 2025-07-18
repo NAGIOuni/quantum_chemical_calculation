@@ -21,7 +21,7 @@ class ServerCredentialUpdate(BaseModel):
 
 
 class ServerCredentialResponse(ServerCredentialBase):
-    id: str
+    id: int
     created_at: datetime
 
     class Config:

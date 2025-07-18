@@ -6,10 +6,16 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.user import User
 import app.crud.user as crud_user
+from dotenv import load_dotenv
+import os
 
-# 環境変数などで管理するのが望ましい
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEYが設定されていません")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -32,7 +38,7 @@ def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exception

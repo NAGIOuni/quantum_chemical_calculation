@@ -20,7 +20,7 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: str
+    id: int
     created_at: datetime
 
     class Config:

@@ -1,5 +1,4 @@
-import uuid
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -19,7 +18,7 @@ class JobStatus(str, enum.Enum):
 class Job(Base):
     __tablename__ = "jobs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     molecule_id = Column(UUID(as_uuid=True), ForeignKey("molecules.id"), nullable=False)
     gjf_path = Column(String(512), nullable=False)
     log_path = Column(String(512), nullable=True)

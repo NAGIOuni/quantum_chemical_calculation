@@ -1,4 +1,3 @@
-import uuid
 from sqlalchemy import Column, String, Integer, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -9,7 +8,7 @@ from .base import Base
 class Molecule(Base):
     __tablename__ = "molecules"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     charge = Column(Integer, nullable=False)
     multiplicity = Column(Integer, nullable=False)

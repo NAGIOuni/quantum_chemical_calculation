@@ -5,9 +5,11 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = "postgresql://postgres.cfzavxtsbztzpsnvmpny:H$CA285g.c+sNw$@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URLが設定されていません")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

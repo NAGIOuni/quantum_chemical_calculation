@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
-from app.api import user, auth
+from app.api import user, auth, molecule, job_bundle, job, server_credential
 import uvicorn
 import os
 
@@ -12,7 +12,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("Supabase URL and Key must be set as environment variables")
+    raise ValueError("SUPABASE_URLまたはSUPABASE_KEYが設定されていません")
 else:
     print("supabaseと接続できています")
 
@@ -20,9 +20,14 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
-app.include_router(user.router)
-app.include_router(auth.router)
-
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(user.router, prefix="/users", tags=["users"])
+app.include_router(molecule.router, prefix="/molecules", tags=["molecules"])
+app.include_router(job_bundle.router, prefix="/bundles", tags=["job_bundles"])
+app.include_router(job.router, prefix="/jobs", tags=["jobs"])
+app.include_router(
+    server_credential.router, prefix="/credentials", tags=["server_credentials"]
+)
 origins = [
     "http://localhost:3000",
 ]

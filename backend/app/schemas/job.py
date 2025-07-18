@@ -4,7 +4,7 @@ from typing import Optional
 
 
 class JobBase(BaseModel):
-    molecule_id: str
+    molecule_id: int
     gjf_path: str
     job_type: str  # SP, Opt, TD など
 
@@ -18,7 +18,7 @@ class JobUpdate(BaseModel):
 
 
 class JobResponse(JobBase):
-    id: str
+    id: int
     log_path: Optional[str]
     status: str
     submitted_at: datetime

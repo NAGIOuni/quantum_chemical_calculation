@@ -37,6 +37,14 @@ def get_jobs_by_user(db: Session, user_id: Any):
     )
 
 
+def get_job_by_id(db: Session, job_id: int) -> Job | None:
+    return db.query(Job).filter(Job.id == job_id).first()
+
+
+def get_jobs_by_molecule(db: Session, molecule_id: int) -> list[Job]:
+    return db.query(Job).filter(Job.molecule_id == molecule_id).all()
+
+
 def update_job_status(db: Session, job: Job, status: str) -> Job:
     job.status = status  # type: ignore
     db.commit()
