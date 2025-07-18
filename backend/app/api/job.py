@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from dependencies import get_db, get_current_user
+from app.dependencies import get_db, get_current_user
 from app.schemas.job import JobCreate, JobResponse, JobUpdate
 from app.crud import job as crud
 from app.models import Job, User
@@ -92,7 +92,7 @@ def cancel_job(
 
     try:
         controller = JobExecutionController(credential)
-        controller.cancel_job(job.remote_job_id)
+        controller.cancel_job(job.remote_job_id)  # type: ignore
         update_job_status(db, job, "cancelled")
         return {"result": "cancelled"}
     except Exception as e:

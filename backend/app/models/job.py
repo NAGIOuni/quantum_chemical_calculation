@@ -28,5 +28,7 @@ class Job(Base):
     remote_job_id = Column(String(100), nullable=True)
     parent_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=True)
 
-    molecule = relationship("Molecule", backref="jobs")
+    molecule = relationship(
+        "Molecule", foreign_keys=[molecule_id], back_populates="jobs", uselist=False
+    )
     parent_job = relationship("Job", remote_side=[id], backref="child_jobs")

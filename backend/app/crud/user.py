@@ -7,7 +7,10 @@ from app.utils.security import hash_password
 
 
 def create_user(db: Session, data: UserCreate) -> User:
-    user = User(**data.dict())
+    user_data = data.dict()
+    raw_password = user_data.pop("password")
+    user_data["hashed_password"] = hash_password(raw_password)
+    user = User(**user_data)
     db.add(user)
     db.commit()
     db.refresh(user)

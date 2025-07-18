@@ -8,6 +8,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    hashed_password = Column(String, nullable=False)
     username = Column(String(50), nullable=False, unique=True)
     role = Column(String(20), nullable=False, default="user")
     local_base_dir = Column(String(512), nullable=False)

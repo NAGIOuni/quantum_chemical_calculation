@@ -16,7 +16,12 @@ class Molecule(Base):
     bundle_id = Column(UUID(as_uuid=True), ForeignKey("job_bundles.id"), nullable=False)
     latest_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=True)
 
-    job_bundle = relationship("JobBundle", backref="molecules")
+    jobs = relationship(
+        "Job",
+        foreign_keys="[Job.molecule_id]",
+        back_populates="molecule",
+        cascade="all, delete-orphan",
+    )
     latest_job = relationship(
         "Job", foreign_keys=[latest_job_id], backref="latest_for_molecules"
     )
