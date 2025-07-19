@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List
 
 from app.dependencies import get_db, get_current_user
@@ -88,7 +89,8 @@ async def cancel_job(
         raise HTTPException(status_code=400, detail="remote_job_id が未登録です")
 
     # 接続情報の取得（1件しか使わない前提）
-    credential = db.query(ServerCredential).first()
+    result = await db.execute(select(ServerCredential).limit(1))
+    credential = result.scalars().first()
     if not credential:
         raise HTTPException(status_code=500, detail="ServerCredential が未登録です")
 
@@ -130,7 +132,8 @@ async def relaunch_job(
     new_job = await create_job(db, new_job_data)
 
     # 接続情報取得
-    credential = await db.query(ServerCredential).first()
+    result = await db.execute(select(ServerCredential).limit(1))
+    credential = result.scalars().first()
     if not credential:
         raise HTTPException(status_code=500, detail="ServerCredential が未登録です")
 
@@ -164,7 +167,8 @@ async def get_job_log(
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="ジョブが見つかりません")
 
-    credential = db.query(ServerCredential).first()
+    result = await db.execute(select(ServerCredential).limit(1))
+    credential = result.scalars().first()
     if not credential:
         raise HTTPException(status_code=500, detail="接続情報が未設定です")
 

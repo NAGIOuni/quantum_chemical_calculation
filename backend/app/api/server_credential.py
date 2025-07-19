@@ -29,7 +29,7 @@ async def get_one(id: int, db: AsyncSession = Depends(get_db)):
     credential = await crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
-    return await credential
+    return credential
 
 
 @router.patch("/{id}", response_model=ServerCredentialResponse)
