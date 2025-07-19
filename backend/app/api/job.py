@@ -52,7 +52,7 @@ async def update_job(
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
     if data.status:
-        job = crud.update_job_status(db, job, data.status)
+        job = await crud.update_job_status(db, job, data.status)
     return job
 
 

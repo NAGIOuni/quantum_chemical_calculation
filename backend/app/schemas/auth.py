@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
+from app.utils.validators import validate_username, validate_password
 
 
 class Token(BaseModel):
@@ -11,5 +12,13 @@ class TokenData(BaseModel):
 
 
 class UserLogin(BaseModel):
-    username: str
-    password: SyntaxWarning
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @validator("username")
+    def validate_username_field(cls, v):
+        return validate_username(v)
+
+    @validator("password")
+    def validate_password_field(cls, v):
+        return validate_password(v)
