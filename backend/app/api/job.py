@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from app.dependencies import get_db, get_current_user
@@ -14,38 +14,40 @@ router = APIRouter()
 
 
 @router.post("/", response_model=JobResponse)
-def create_job(
+async def create_job(
     data: JobCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     # molecule 所有者確認など必要ならここで
-    return crud.create_job(db, data)
+    return await crud.create_job(db, data)
 
 
 @router.get("/", response_model=List[JobResponse])
-def list_jobs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return crud.get_jobs_by_user(db, user.id)  # type: ignore
+async def list_jobs(
+    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+):
+    return await crud.get_jobs_by_user(db, user.id)  # type: ignore
 
 
 @router.get("/{id}", response_model=JobResponse)
-def get_job(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def get_job(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    job = crud.get_job(db, id)
+    job = await crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
     return job
 
 
 @router.patch("/{id}", response_model=JobResponse)
-def update_job(
+async def update_job(
     id: int,
     data: JobUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    job = crud.get_job(db, id)
+    job = await crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
     if data.status:
@@ -54,28 +56,28 @@ def update_job(
 
 
 @router.delete("/{id}", status_code=204)
-def delete_job(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def delete_job(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    job = crud.get_job(db, id)
+    job = await crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
     if job.status not in ["queued", "error"]:
         raise HTTPException(
             status_code=400, detail="Cannot delete running or finished job"
         )
-    crud.delete_job(db, job)
+    await crud.delete_job(db, job)
 
 
 @router.post("/{id}/cancel")
-def cancel_job(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def cancel_job(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_execution import JobExecutionController
     from crud.job import update_job_status
     from models import ServerCredential
 
-    job = crud.get_job(db, id)
+    job = await crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
@@ -93,7 +95,7 @@ def cancel_job(
     try:
         controller = JobExecutionController(credential)
         controller.cancel_job(job.remote_job_id)  # type: ignore
-        update_job_status(db, job, "cancelled")
+        await update_job_status(db, job, "cancelled")
         return {"result": "cancelled"}
     except Exception as e:
         raise HTTPException(
@@ -102,14 +104,14 @@ def cancel_job(
 
 
 @router.post("/{id}/relaunch", response_model=JobResponse)
-def relaunch_job(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def relaunch_job(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_execution import JobExecutionController
     from crud.job import create_job, update_job_status
     from models import ServerCredential
 
-    old_job = crud.get_job(db, id)
+    old_job = await crud.get_job(db, id)
     if not old_job or old_job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="元ジョブが見つかりません")
 
@@ -125,10 +127,10 @@ def relaunch_job(
         job_type=old_job.job_type,  # type: ignore
         parent_job_id=old_job.id,  # type: ignore
     )
-    new_job = create_job(db, new_job_data)
+    new_job = await create_job(db, new_job_data)
 
     # 接続情報取得
-    credential = db.query(ServerCredential).first()
+    credential = await db.query(ServerCredential).first()
     if not credential:
         raise HTTPException(status_code=500, detail="ServerCredential が未登録です")
 
@@ -143,22 +145,22 @@ def relaunch_job(
         )
         new_job.remote_job_id = job_id  # type: ignore
         new_job.status = "running"  # type: ignore
-        db.commit()
-        db.refresh(new_job)
+        await db.commit()
+        await db.refresh(new_job)
         return new_job
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"再投入に失敗しました: {str(e)}")
 
 
 @router.get("/{id}/log")
-def get_job_log(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def get_job_log(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
     from services.job_monitor import get_log_tail_via_ssh, get_job_status_via_qstat
     from services.job_execution import JobExecutionController
     from models import ServerCredential
 
-    job = crud.get_job(db, id)
+    job = await crud.get_job(db, id)
     if not job or job.molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="ジョブが見つかりません")
 
@@ -173,13 +175,13 @@ def get_job_log(
 
     try:
         # ログ末尾取得
-        log_tail = get_log_tail_via_ssh(host, usernm, password, log_path)  # type: ignore
+        log_tail = await get_log_tail_via_ssh(host, usernm, password, log_path)  # type: ignore
         is_complete = (
             "Normal termination" in log_tail or "Error termination" in log_tail
         )
 
         # qstatから状態取得
-        remote_status = get_job_status_via_qstat(
+        remote_status = await get_job_status_via_qstat(
             host, usernm, password, job.remote_job_id or ""  # type: ignore
         )
 

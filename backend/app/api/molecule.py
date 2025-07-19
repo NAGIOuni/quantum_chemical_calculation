@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from app.models.molecule import Molecule
@@ -12,50 +12,50 @@ router = APIRouter()
 
 
 @router.post("/", response_model=MoleculeResponse)
-def create_molecule(
+async def create_molecule(
     data: MoleculeCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     # 所有バンドルの確認など行うならここでチェック
-    return crud.create_molecule(db, data)
+    return await crud.create_molecule(db, data)
 
 
 @router.get("/", response_model=List[MoleculeResponse])
-def list_molecules(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def list_molecules(
+    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    return crud.get_all_molecules_by_user(db, user.id)  # type: ignore
+    return await crud.get_all_molecules_by_user(db, user.id)  # type: ignore
 
 
 @router.get("/{id}", response_model=MoleculeResponse)
-def get_molecule(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def get_molecule(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    molecule = crud.get_molecule(db, id)
+    molecule = await crud.get_molecule(db, id)
     if not molecule or molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Molecule not found")
     return molecule
 
 
 @router.patch("/{id}", response_model=MoleculeResponse)
-def update_molecule(
+async def update_molecule(
     id: int,
     data: MoleculeUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    molecule = crud.get_molecule(db, id)
+    molecule = await crud.get_molecule(db, id)
     if not molecule or molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Molecule not found")
-    return crud.update_molecule(db, molecule, data)
+    return await crud.update_molecule(db, molecule, data)
 
 
 @router.delete("/{id}", status_code=204)
-def delete_molecule(
-    id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+async def delete_molecule(
+    id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    molecule = crud.get_molecule(db, id)
+    molecule = await crud.get_molecule(db, id)
     if not molecule or molecule.job_bundle.user_id != user.id:
         raise HTTPException(status_code=404, detail="Molecule not found")
-    crud.delete_molecule(db, molecule)
+    await crud.delete_molecule(db, molecule)

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.server_credential import (
     ServerCredentialCreate,
     ServerCredentialUpdate,
@@ -15,41 +15,43 @@ router = APIRouter()
 
 
 @router.post("/", response_model=ServerCredentialResponse)
-def create(data: ServerCredentialCreate, db: Session = Depends(get_db)):
-    return crud.create_credential(db, data)
+async def create(data: ServerCredentialCreate, db: AsyncSession = Depends(get_db)):
+    return await crud.create_credential(db, data)
 
 
 @router.get("/", response_model=list[ServerCredentialResponse])
-def get_all(db: Session = Depends(get_db)):
-    return crud.get_all(db)
+async def get_all(db: AsyncSession = Depends(get_db)):
+    return await crud.get_all(db)
 
 
 @router.get("/{id}", response_model=ServerCredentialResponse)
-def get_one(id: int, db: Session = Depends(get_db)):
-    credential = crud.get_by_id(db, id)
+async def get_one(id: int, db: AsyncSession = Depends(get_db)):
+    credential = await crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
-    return credential
+    return await credential
 
 
 @router.patch("/{id}", response_model=ServerCredentialResponse)
-def update(id: int, data: ServerCredentialUpdate, db: Session = Depends(get_db)):
-    credential = crud.get_by_id(db, id)
+async def update(
+    id: int, data: ServerCredentialUpdate, db: AsyncSession = Depends(get_db)
+):
+    credential = await crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
-    return crud.update_credential(db, credential, data)
+    return await crud.update_credential(db, credential, data)
 
 
 @router.delete("/{id}", status_code=204)
-def delete(id: int, db: Session = Depends(get_db)):
-    credential = crud.get_by_id(db, id)
+async def delete(id: int, db: AsyncSession = Depends(get_db)):
+    credential = await crud.get_by_id(db, id)
     if not credential:
         raise HTTPException(status_code=404, detail="Credential not found")
-    crud.delete_credential(db, credential)
+    await crud.delete_credential(db, credential)
 
 
 @router.post("/test-connection")
-def test_connection(data: ServerCredentialCreate):
+async def test_connection(data: ServerCredentialCreate):
     try:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
