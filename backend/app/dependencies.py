@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import AsyncSessionLocal
 from app.models.user import User
 import app.crud.user as crud_user
 from dotenv import load_dotenv

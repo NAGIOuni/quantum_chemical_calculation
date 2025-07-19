@@ -1,6 +1,8 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas import UserCreate, UserUpdate
 import uuid
 from datetime import datetime, timezone
 from app.utils.security import hash_password
@@ -21,8 +23,9 @@ def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def get_user_by_username(db: Session, username: str) -> User | None:
-    return db.query(User).filter(User.username == username).first()
+async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
+    result = await db.execute(select(User).where(User.username == username))
+    return result.scalars().first()
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
@@ -42,16 +45,3 @@ def update_user(db: Session, user: User, user_in: UserUpdate) -> User:
 def delete_user(db: Session, user: User):
     db.delete(user)
     db.commit()
-
-
-from passlib.context import CryptContext
-
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def authenticate(db: Session, username: str, plain_pw: str):
-    user = get_user_by_username(db, username)
-    if not user:
-        return None
-    if not pwd_ctx.verify(plain_pw, user.hashed_password):
-        return None

@@ -1,32 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt
 from datetime import timedelta, datetime, timezone
 
 from app.dependencies import get_db, SECRET_KEY, ALGORITHM
 from app.models.user import User
-from app.schemas import LoginRequest
+from app.schemas import Token, TokenData
 from app.crud.user import get_user_by_username
 from app.utils.security import verify_password
 import app.crud.user as crud_user
+from app.utils.security import create_access_token
 
 router = APIRouter()
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # トークン有効時間
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-@router.post("/token")
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+@router.post("/login", response_model=Token)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):
-    user = get_user_by_username(db, form_data.username)
-    if not user or not user.verify_password(form_data.password):
-        raise HTTPException(400, "ユーザー名またはパスワードが正しくありません")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {
-        "sub": str(user.id),
-        "exp": datetime.now(timezone.utc) + access_token_expires,
-    }
-    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # type: ignore
-    return {"access_token": token, "token_type": "bearer"}
+    user = await get_user_by_username(db, form_data.username)
+    if not user or not verify_password(form_data.password, user.hashed_password):  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=TokenData)
+async def read_users_me(token: str = Depends(oauth2_scheme)):
+    return {"username": "extracted_username_from_token"}
