@@ -42,3 +42,16 @@ def update_user(db: Session, user: User, user_in: UserUpdate) -> User:
 def delete_user(db: Session, user: User):
     db.delete(user)
     db.commit()
+
+
+from passlib.context import CryptContext
+
+pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def authenticate(db: Session, username: str, plain_pw: str):
+    user = get_user_by_username(db, username)
+    if not user:
+        return None
+    if not pwd_ctx.verify(plain_pw, user.hashed_password):
+        return None

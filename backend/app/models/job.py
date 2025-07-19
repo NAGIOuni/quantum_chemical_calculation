@@ -19,14 +19,14 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    molecule_id = Column(UUID(as_uuid=True), ForeignKey("molecules.id"), nullable=False)
+    molecule_id = Column(Integer, ForeignKey("molecules.id"), nullable=False)
     gjf_path = Column(String(512), nullable=False)
     log_path = Column(String(512), nullable=True)
     job_type = Column(String(20), nullable=False)
     status = Column(Enum(JobStatus), nullable=False)
     submitted_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
     remote_job_id = Column(String(100), nullable=True)
-    parent_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=True)
+    parent_job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True)
 
     molecule = relationship(
         "Molecule", foreign_keys=[molecule_id], back_populates="jobs", uselist=False

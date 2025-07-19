@@ -6,13 +6,14 @@ from datetime import timedelta, datetime, timezone
 
 from app.dependencies import get_db, SECRET_KEY, ALGORITHM
 from app.models.user import User
+from app.schemas import LoginRequest
 from app.crud.user import get_user_by_username
 from app.utils.security import verify_password
 import app.crud.user as crud_user
 
 router = APIRouter()
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # トークン有効時間
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # トークン有効時間
 
 
 @router.post("/token")

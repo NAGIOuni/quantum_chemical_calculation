@@ -13,8 +13,8 @@ class Molecule(Base):
     charge = Column(Integer, nullable=False)
     multiplicity = Column(Integer, nullable=False)
     structure_xyz = Column(Text, nullable=False)
-    bundle_id = Column(UUID(as_uuid=True), ForeignKey("job_bundles.id"), nullable=False)
-    latest_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=True)
+    bundle_id = Column(Integer, ForeignKey("job_bundles.id"), nullable=False)
+    latest_job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True)
 
     jobs = relationship(
         "Job",
