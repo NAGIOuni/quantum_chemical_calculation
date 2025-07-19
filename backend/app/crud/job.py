@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.job import Job
 from app.schemas.job import JobCreate
 from datetime import datetime, timezone
@@ -6,43 +8,52 @@ import uuid
 from typing import Any
 
 
-def create_job(db: Session, data: JobCreate) -> Job:
+async def create_job(db: AsyncSession, data: JobCreate) -> Job:
     job = Job(**data.dict())
     db.add(job)
-    db.commit()
-    db.refresh(job)
+    await db.commit()
+    await db.refresh(job)
     return job
 
 
-def get_job(db: Session, job_id: int) -> Job:
-    return db.query(Job).filter(Job.id == job_id).first()
+async def get_job(db: AsyncSession, job_id: int) -> Job:
+    result = await db.execute(
+        select(Job)
+        .options(selectinload(Job.molecule).selectinload(Job.molecule.job_bundle))
+        .where(Job.id == job_id)
+    )
+    return result.scalars().first()
 
 
-def get_jobs_by_user(db: Session, user_id: int):
-    return (
-        db.query(Job)
+async def get_jobs_by_user(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(Job)
         .join(Job.molecule)
         .join(Job.molecule.job_bundle)
-        .filter(Job.molecule.job_bundle.user_id == user_id)
-        .all()
+        .options(selectinload(Job.molecule).selectinload(Job.molecule.job_bundle))
+        .where(Job.molecule.job_bundle.user_id == user_id)
     )
+    return result.scalars().all()
 
 
-def get_job_by_id(db: Session, job_id: int) -> Job | None:
-    return db.query(Job).filter(Job.id == job_id).first()
+async def get_job_by_id(db: AsyncSession, job_id: int) -> Job | None:
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    return result.scalars().first()
 
 
-def get_jobs_by_molecule(db: Session, molecule_id: int) -> list[Job]:
-    return db.query(Job).filter(Job.molecule_id == molecule_id).all()
+async def get_jobs_by_molecule(db: AsyncSession, molecule_id: int) -> list[Job]:
+    result = await db.execute(select(Job).where(Job.molecule_id == molecule_id))
+    jobs = result.scalars().all()
+    return list(jobs)
 
 
-def update_job_status(db: Session, job: Job, status: str) -> Job:
+async def update_job_status(db: AsyncSession, job: Job, status: str) -> Job:
     job.status = status  # type: ignore
-    db.commit()
-    db.refresh(job)
+    await db.commit()
+    await db.refresh(job)
     return job
 
 
-def delete_job(db: Session, job: Job):
-    db.delete(job)
-    db.commit()
+async def delete_job(db: AsyncSession, job: Job):
+    await db.delete(job)
+    await db.commit()

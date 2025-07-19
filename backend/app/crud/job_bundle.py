@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.job_bundle import JobBundle
 from app.schemas.job_bundle import JobBundleCreate, JobBundleUpdate
 from datetime import datetime, timezone
@@ -6,34 +7,40 @@ import uuid
 from typing import Any
 
 
-def create_bundle(db: Session, data: JobBundleCreate) -> JobBundle:
+async def create_bundle(db: AsyncSession, data: JobBundleCreate) -> JobBundle:
     bundle = JobBundle(**data.dict())
     db.add(bundle)
-    db.commit()
-    db.refresh(bundle)
+    await db.commit()
+    await db.refresh(bundle)
     return bundle
 
 
-def get_all_bundles_by_user(db: Session, user_id: Any):
-    return db.query(JobBundle).filter(JobBundle.user_id == user_id).all()
+async def get_all_bundles_by_user(db: AsyncSession, user_id: Any):
+    result = await db.execute(select(JobBundle).where(JobBundle.user_id == user_id))
+    return result.scalars().all()
 
 
-def get_bundle_by_id(db: Session, bundle_id: int) -> JobBundle | None:
-    return db.query(JobBundle).filter(JobBundle.id == bundle_id).first()
+async def get_bundle_by_id(db: AsyncSession, bundle_id: int) -> JobBundle | None:
+    result = await db.execute(select(JobBundle).where(JobBundle.id == bundle_id))
+    return result.scalars().first()
 
 
-def get_bundles_by_user(db: Session, user_id: int) -> list[JobBundle]:
-    return db.query(JobBundle).filter(JobBundle.user_id == user_id).all()
+async def get_bundles_by_user(db: AsyncSession, user_id: int) -> list[JobBundle]:
+    result = await db.execute(select(JobBundle).where(JobBundle.user_id == user_id))
+    bundles = result.scalars().all()
+    return list(bundles)
 
 
-def update_bundle(db: Session, bundle: JobBundle, data: JobBundleUpdate) -> JobBundle:
+async def update_bundle(
+    db: AsyncSession, bundle: JobBundle, data: JobBundleUpdate
+) -> JobBundle:
     for field, value in data.dict(exclude_unset=True).items():
         setattr(bundle, field, value)
-    db.commit()
-    db.refresh(bundle)
+    await db.commit()
+    await db.refresh(bundle)
     return bundle
 
 
-def delete_bundle(db: Session, bundle: JobBundle):
-    db.delete(bundle)
-    db.commit()
+async def delete_bundle(db: AsyncSession, bundle: JobBundle):
+    await db.delete(bundle)
+    await db.commit()

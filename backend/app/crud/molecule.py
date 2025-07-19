@@ -1,43 +1,55 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.molecule import Molecule
 from app.schemas.molecule import MoleculeCreate, MoleculeUpdate
 import uuid
 from datetime import datetime
 
 
-def create_molecule(db: Session, data: MoleculeCreate) -> Molecule:
+async def create_molecule(db: AsyncSession, data: MoleculeCreate) -> Molecule:
     mol = Molecule(**data.dict())
     db.add(mol)
-    db.commit()
-    db.refresh(mol)
+    await db.commit()
+    await db.refresh(mol)
     return mol
 
 
-def get_molecule(db: Session, mol_id: int) -> Molecule | None:
-    return db.query(Molecule).filter(Molecule.id == mol_id).first()
-
-
-def get_molecules_by_bundle(db: Session, bundle_id: int) -> list[Molecule]:
-    return db.query(Molecule).filter(Molecule.bundle_id == bundle_id).all()
-
-
-def get_all_molecules_by_user(db: Session, user_id: int):
-    return (
-        db.query(Molecule)
-        .join(Molecule.job_bundle)
-        .filter(Molecule.job_bundle.user_id == user_id)
-        .all()
+async def get_molecule(db: AsyncSession, mol_id: int) -> Molecule | None:
+    result = await db.execute(
+        select(Molecule)
+        .options(selectinload(Molecule.job_bundle))
+        .where(Molecule.id == mol_id)
     )
+    return result.scalars().first()
 
 
-def update_molecule(db: Session, molecule: Molecule, data: MoleculeUpdate) -> Molecule:
+async def get_molecules_by_bundle(db: AsyncSession, bundle_id: int) -> list[Molecule]:
+    result = await db.execute(select(Molecule).where(Molecule.bundle_id == bundle_id))
+    mols = result.scalars().all()
+    return list(mols)
+
+
+async def get_all_molecules_by_user(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(Molecule)
+        .join(Molecule.job_bundle)
+        .options(selectinload(Molecule.job_bundle))
+        .where(Molecule.job_bundle.user_id == user_id)
+    )
+    return result.scalars().all()
+
+
+async def update_molecule(
+    db: AsyncSession, molecule: Molecule, data: MoleculeUpdate
+) -> Molecule:
     for field, value in data.dict(exclude_unset=True).items():
         setattr(molecule, field, value)
-    db.commit()
-    db.refresh(molecule)
+    await db.commit()
+    await db.refresh(molecule)
     return molecule
 
 
-def delete_molecule(db: Session, molecule: Molecule):
-    db.delete(molecule)
-    db.commit()
+async def delete_molecule(db: AsyncSession, molecule: Molecule):
+    await db.delete(molecule)
+    await db.commit()

@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.server_credential import ServerCredential
 from app.schemas.server_credential import ServerCredentialCreate, ServerCredentialUpdate
 from app.utils.encryption import encrypt_text, decrypt_text
@@ -7,38 +8,43 @@ import uuid
 from datetime import datetime, timezone
 
 
-def create_credential(db: Session, data: ServerCredentialCreate) -> ServerCredential:
+async def create_credential(
+    db: AsyncSession, data: ServerCredentialCreate
+) -> ServerCredential:
     cred = ServerCredential(**data.dict())
     cred.password_encrypted = encrypt_text(data.password)  # type: ignore
     db.add(cred)
-    db.commit()
-    db.refresh(cred)
+    await db.commit()
+    await db.refresh(cred)
     return cred
 
 
-def get_all(db: Session):
-    return db.query(ServerCredential).all()
+async def get_all(db: AsyncSession):
+    result = await db.execute(select(ServerCredential))
+    return result.scalars().all()
 
 
-def get_by_id(db: Session, id: int):
-    return db.query(ServerCredential).filter(ServerCredential.id == id).first()
+async def get_by_id(db: AsyncSession, id: int):
+    result = await db.execute(select(ServerCredential).where(ServerCredential.id == id))
+    return result.scalars().first()
 
 
-def update_credential(
-    db: Session, cred_id: int, data: ServerCredentialUpdate
+async def update_credential(
+    db: AsyncSession, credential: ServerCredential, data: ServerCredentialUpdate
 ) -> ServerCredential:
-    cred = db.query(ServerCredential).get(cred_id)
-    if cred is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Credential {cred_id} not found",
-        )
-    cred.password_encrypted = encrypt_text(data.password)  # type: ignore
-    db.commit()
-    db.refresh(cred)
-    return cred
+    if data.password:
+        credential.password_encrypted = encrypt_text(data.password)  # type: ignore
+    if data.host:
+        credential.host = data.host  # type: ignore
+    if data.username:
+        credential.username = data.username  # type: ignore
+    if data.auth_method:
+        credential.auth_method = data.auth_method  # type: ignore
+    await db.commit()
+    await db.refresh(credential)
+    return credential
 
 
-def delete_credential(db: Session, credential: ServerCredential):
-    db.delete(credential)
-    db.commit()
+async def delete_credential(db: AsyncSession, credential: ServerCredential):
+    await db.delete(credential)
+    await db.commit()
