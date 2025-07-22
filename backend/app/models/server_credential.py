@@ -1,15 +1,33 @@
-from sqlalchemy import Column, String, DateTime, Integer
+# app/models/server_credential.py
+
+import enum
 from datetime import datetime, timezone
 
-from .base import Base
+from sqlalchemy import Column, Integer, String, DateTime, Enum
+from app.models.base import Base
+
+
+class AuthMethod(str, enum.Enum):
+    password = "password"
+    ssh_key = "ssh_key"
 
 
 class ServerCredential(Base):
     __tablename__ = "server_credentials"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    host = Column(String(100), nullable=False)
-    username = Column(String(100), nullable=False)
-    password_encrypted = Column(String(512), nullable=False)
-    auth_method = Column(String(20), nullable=False, default="password")
-    created_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    host = Column(String, nullable=False, comment="ホスト名")
+    port = Column(Integer, nullable=False, default=22, comment="SSH ポート番号")
+    username = Column(String, nullable=False, comment="SSH ユーザー名")
+    password_encrypted = Column(
+        String, nullable=False, comment="Fernet 暗号化済みパスワード"
+    )
+    ssh_key_encrypted = Column(
+        String, nullable=False, comment="Fernet 暗号化済み秘密鍵"
+    )
+    auth_method = Column(
+        Enum(AuthMethod), nullable=False, comment="認証方式(`password` or `ssh_key`)"
+    )
+    created_at = Column(
+        DateTime, nullable=False, default=datetime.now(timezone.utc), comment="登録日時"
+    )
