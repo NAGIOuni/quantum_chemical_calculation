@@ -16,7 +16,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
 @router.get("/me", response_model=UserResponse)
 async def read_current_user(current_user: User = Depends(get_current_user)):
-    return await current_user
+    return current_user
 
 
 @router.patch("/me", response_model=UserResponse)
