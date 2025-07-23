@@ -5,6 +5,7 @@ from app.models.molecule import Molecule
 from app.schemas.molecule import MoleculeCreate, MoleculeUpdate
 import uuid
 from datetime import datetime
+from typing import Any
 
 
 async def create_molecule(db: AsyncSession, data: MoleculeCreate) -> Molecule:

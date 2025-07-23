@@ -12,7 +12,9 @@ class JobBundle(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc)
+    )
     calc_settings = Column(JSON, nullable=True)
 
     user = relationship("User", backref="job_bundles")

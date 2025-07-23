@@ -7,8 +7,12 @@ import uuid
 from typing import Any
 
 
-async def create_bundle(db: AsyncSession, data: JobBundleCreate) -> JobBundle:
-    bundle = JobBundle(**data.dict())
+async def create_bundle(
+    db: AsyncSession, data: JobBundleCreate, user_id: Any
+) -> JobBundle:
+    bundle = JobBundle(
+        name=data.name, user_id=user_id, calc_settings=data.calc_settings
+    )
     db.add(bundle)
     await db.commit()
     await db.refresh(bundle)

@@ -14,7 +14,7 @@ if SECRET_KEY is None:
     raise RuntimeError("SECRET_KEY environment variable is not set.")
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # トークン有効時間
+ACCESS_TOKEN_EXPIRE_MINUTES = 600  # トークン有効時間
 
 
 def hash_password(plain_password: str) -> str:
