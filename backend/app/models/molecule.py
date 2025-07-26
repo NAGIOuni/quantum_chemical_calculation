@@ -25,3 +25,4 @@ class Molecule(Base):
     latest_job = relationship(
         "Job", foreign_keys=[latest_job_id], backref="latest_for_molecules"
     )
+    job_bundle = relationship("JobBundle", back_populates="molecules")

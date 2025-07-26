@@ -16,5 +16,8 @@ class JobBundle(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc)
     )
     calc_settings = Column(JSON, nullable=True)
+    molecules = relationship(
+        "Molecule", back_populates="job_bundle", cascade="all, delete-orphan"
+    )
 
     user = relationship("User", backref="job_bundles")

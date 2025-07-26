@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from app.models.molecule import Molecule
+from app.models import Molecule, JobBundle
 from app.schemas.molecule import MoleculeCreate, MoleculeUpdate
 import uuid
 from datetime import datetime
@@ -17,11 +17,7 @@ async def create_molecule(db: AsyncSession, data: MoleculeCreate) -> Molecule:
 
 
 async def get_molecule(db: AsyncSession, mol_id: int) -> Molecule | None:
-    result = await db.execute(
-        select(Molecule)
-        .options(selectinload(Molecule.job_bundle))
-        .where(Molecule.id == mol_id)
-    )
+    result = await db.execute(select(Molecule).where(Molecule.id == mol_id))
     return result.scalars().first()
 
 
@@ -34,9 +30,8 @@ async def get_molecules_by_bundle(db: AsyncSession, bundle_id: int) -> list[Mole
 async def get_all_molecules_by_user(db: AsyncSession, user_id: int):
     result = await db.execute(
         select(Molecule)
-        .join(Molecule.job_bundle)
-        .options(selectinload(Molecule.job_bundle))
-        .where(Molecule.job_bundle.user_id == user_id)
+        .join(JobBundle, Molecule.bundle_id == JobBundle.id)
+        .where(JobBundle.user_id == user_id)
     )
     return result.scalars().all()
 

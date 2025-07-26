@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from typing import List
 
 from app.schemas.job_bundle import JobBundleCreate, JobBundleUpdate, JobBundleResponse
@@ -54,7 +56,12 @@ async def update_bundle(
 async def delete_bundle(
     id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    bundle = await crud.get_bundle_by_id(db, id)
+    result = await db.execute(
+        select(JobBundle)
+        .options(selectinload(JobBundle.molecules))
+        .where(JobBundle.id == id)
+    )
+    bundle = result.scalars().first()
     if not bundle or bundle.user_id != user.id:  # type: ignore
         raise HTTPException(status_code=404, detail="JobBundle not found")
     if bundle.molecules:  # 関連分子が存在するなら削除させない
